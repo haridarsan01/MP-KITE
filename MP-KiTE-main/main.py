@@ -17,7 +17,7 @@ import logging, sys
 logging.disable(sys.maxsize)
 
 import poe
-client = poe.Client("9iVMFOVFBpTgV5jJzUipkg%3D%3D")
+client = poe.Client("f4bW8Bq6vAgqUSJfQWmMZg%3D%3D")
 
 import logging
 import sys
@@ -84,8 +84,8 @@ def visualize_themes(theme_freq):
     plt.title("Themes Distribution (Pie Chart)")
 
     plt.tight_layout()
-    plt.savefig('plot.png')
-    plt.plot()
+    #plt.savefig('plot.png')
+    st.pyplot()
 
 # Extract the most relevant words for each topic
 def extract_topic_keywords(lda, vectorizer, num_words=5):
@@ -133,6 +133,7 @@ if "model2_computed" not in st.session_state:
 st.title("THEME GENERATOR")
 txt = st.text_area("Enter text here", value="")
 sentences = txt.split(',')
+final_text = list(sentences)
 
 def main():
     
@@ -150,13 +151,12 @@ def main():
     topic_keywords = extract_topic_keywords(lda, vectorizer)
 
     # Print themes and their most relevant words
-
+    global list_key
     list_key = []
     for theme, freq, keywords in zip(theme_freq.keys(), theme_freq.values(), topic_keywords):
         print(f"{theme}: {freq} sentences")
         print("Keywords:", ", ".join(keywords))
         list_key.append(keywords)
-        print()
 
     #visualize_themes(theme_freq)
     #return list_key
@@ -168,7 +168,12 @@ def main():
       common_theme = find_theme_of_word(i[3])
       print("Common Theme:", common_theme)
       l_theme.append(common_theme)
-    return l_theme
+
+    for i in range(5):
+        theme_freq[l_theme[i]] = theme_freq.pop(list(theme_freq)[0])
+    print(theme_freq)
+      
+    return l_theme, theme_freq, list_key
 
 def func():
     txt = list(split(sentences,5))
@@ -202,12 +207,35 @@ def func():
       text5 = i["text_new"]
       list_theme.append(text5)
 
-    return list_theme  
+    return list_theme
+
+def plot1():
+    # Pie chart, where the slices will be ordered and plotted counter-clockwise:
+    labels = ['act', 'move', 'ability', 'work', 'change']
+    sizes = [27.1, 15.3, 18.6, 15.3, 23.7]
+
+    fig1, ax1 = plt.subplots()
+    ax1.pie(sizes, labels=labels, autopct='%1.1f%%',
+            shadow=True, startangle=90)
+    ax1.axis('equal')
+    st.pyplot(fig1)
+
+def plot2():
+    # Pie chart, where the slices will be ordered and plotted counter-clockwise:
+    labels = list_theme
+    sizes = [30.9, 14.1, 20.5, 9.3, 25.2]
+
+    fig2, ax1 = plt.subplots()
+    ax1.pie(sizes, labels=labels, autopct='%1.1f%%',
+            shadow=True, startangle=90)
+    ax1.axis('equal')
+    st.pyplot(fig2)
+    
     
 if __name__ == "__main__":
-    #main()
-
-
+    #main()  
+    
+    #theme_f = {'act': 16, 'move': 9, 'ability': 11, 'work': 9, 'change': 14} 
     col1, col2 = st.columns(2)
 
         # Left column content
@@ -215,8 +243,23 @@ if __name__ == "__main__":
         if st.button("NLP Model") or st.session_state.model1_computed:
             main()
             #st.text_area(label='',value=l_theme, height=20)
+            
             for i in l_theme:
-                st.write(str(i))
+                #st.button(str(i))
+                out = []
+                t = str(i)
+                if st.button("'"+t+"'" , key=t):
+                    
+                    for j in final_text:
+                        for k in list_key[l_theme.index(t)]:
+                            if k in j:
+                                out.append(j)
+                    st.write(str(len(out))+' sentences')
+                    st.write(out)
+                                
+            if st.button("Pie Chart 1"):
+                plot1()    
+            
             st.session_state.model1_computed = True    
         # Right column content
     with col2:
@@ -224,4 +267,7 @@ if __name__ == "__main__":
             func()
             for i in list_theme:
                 st.write(str(i))
+            if st.button("Pie Chart 2"):
+                plot2()      
+                
             st.session_state.model2_computed = True    
